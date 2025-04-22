@@ -10,7 +10,6 @@ stack_name = 'assignment4'
 source_bucket_name = "cf-static-website-psg1"
 region = 'ap-south-1'
 
-
 parameter = [
         {
             'ParameterKey': 'S3BucketName',
