@@ -16,6 +16,6 @@ mkdir python
 
 pip3 install pymysql --target "python"
 
-zip -r python.zip .
+zip -r python.zip python
 
 aws s3 cp --no-progress python.zip "s3://${bucket}"
