@@ -1,0 +1,79 @@
+
+name: Deployment of assignment1
+
+run-name: Deploying resources for assignment 3
+
+on:
+  push:
+    branches:
+      - "dev"
+  pull_request:
+    branches:
+      - "main"
+
+env:
+  BUCKET: "cf-code-bucket-psg"
+  REGION: "ap-south-1"
+
+jobs:
+  s3-create-code-bucket:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Cred
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+
+      - name: Creating Code S3 Bucket
+        continue-on-error: true
+        run: aws s3api create-bucket --bucket ${BUCKET} --region ${REGION} --create-bucket-configuration LocationConstraint=$REGION
+
+  upload-files:
+    runs-on: ubuntu-latest
+    needs: s3-create-code-bucket
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Cred
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+
+      - name: Zipping lambda
+        run: |
+          bash ./upload.sh $BUCKET
+          ls
+
+  create_update_stack:
+    runs-on: ubuntu-latest
+    needs: upload-files
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Cred
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+
+      - name: Run cf deploy
+        run: python3 main.py

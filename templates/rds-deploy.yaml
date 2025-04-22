@@ -1,0 +1,112 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: This template makes resources for assignment 4
+Parameters:
+  S3BucketName:
+    Type: String
+    Default: cf-static-webpage-psg1
+  UIFileName:
+    Type: String
+    Default: index.html
+  RestApiname:
+    Type: String
+    Default: task
+  RdsDatabseName:
+    Type: String
+    Default: another_db
+  SecretName:
+    Type: String
+    Default: MySecret
+  CodeBucket:
+    Type: String
+    Default: code-bucket-psg
+  LambdaKey:
+    Type: String
+    Default: lambda-function.zip
+  LambdaHandler:
+    Type: String
+    Default: lambda-function.handler
+  LambdaKey1:
+    Type: String
+    Default: rds_lambda.zip
+  LambdaHandler1:
+    Type: String
+    Default: rds_lambda.handler
+  Lambdalayerfile:
+    Type: String
+    Default: python.zip
+  Lambdalayername:
+    Type: String
+    Default: task4
+  LambdaFunctionName:
+    Type: String
+    Default: rds-lambda
+  ApiGatewayStageName:
+    Type: String
+    Default: Test
+  Subnets:
+    Type: List<String>
+    Default: "subnet-081c48a795467b23e, subnet-0f80099cb152ad47c, subnet-0bf72325ac0ea98d1"
+
+Resources:
+  WebsiteBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: !Ref S3BucketName
+      WebsiteConfiguration:
+        IndexDocument: !Ref UIFileName
+  Secretm:
+    Type: "AWS::SecretsManager::Secret"
+    Properties:
+      Name: !Ref SecretName
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "admin"}'
+        GenerateStringKey: "password"
+        PasswordLength: 30
+        ExcludeCharacters: '"@/\'
+  DBSubnetGroup:
+    Type: "AWS::RDS::DBSubnetGroup"
+    Properties:
+      DBSubnetGroupDescription: "subnet group for rds"
+      SubnetIds: !Ref Subnets
+  MySQLInstance:
+    Type: "AWS::RDS::DBInstance"
+    Properties:
+      DBInstanceClass: 'db.t3.micro'
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      VPCSecurityGroups:
+        - !GetAtt SecurityGroup.GroupId
+      DBName: !Ref RdsDatabseName
+      Engine: "MySQL"
+      EngineVersion: "8.0.40"
+      MasterUsername: !Join [ '', [ '{{resolve:secretsmanager:', !Ref Secretm, ':SecretString:username}}' ] ]
+      MasterUserPassword: !Join [ '', [ '{{resolve:secretsmanager:', !Ref Secretm, ':SecretString:password}}' ] ]
+      StorageType: gp2
+      AllocatedStorage: 20
+    DeletionPolicy: Snapshot
+    UpdateReplacePolicy: Snapshot
+  SecretRDSInstanceAttachment:
+    Type: "AWS::SecretsManager::SecretTargetAttachment"
+    Properties:
+      SecretId: !Ref Secretm
+      TargetId: !Ref MySQLInstance
+      TargetType: AWS::RDS::DBInstance
+  SecrityGroupLambda:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: Allow lambda outbound traffic
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          FromPort: 3306
+          ToPort: 3306
+          CidrIp: 0.0.0.0/0
+      VpcId: "vpc-0ff4bb576c57990b2"
+  SecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: Allow mysql inbound traffic
+      SecurityGroupIngress:
+        - IpProtocol: -1
+          FromPort: 3306
+          ToPort: 3306
+          SourceSecurityGroupId: !GetAtt SecrityGroupLambda.GroupId
+      VpcId: "vpc-0ff4bb576c57990b2"
