@@ -9,7 +9,7 @@ logging.getLogger().setLevel("INFO")
 
 
 def replace_placeholder(api_endpoint):
-    cwd = os.path.join(os.getcwd(), "webpage\\index.html")
+    cwd = os.path.join(os.getcwd(), "webpage/index.html")
     try:
         with open(cwd, 'r') as file:
             html_content = file.read()
@@ -27,7 +27,7 @@ def replace_placeholder(api_endpoint):
 
 def upload_file():
     bucket_name = os.getenv("HOSTING_BUCKET")
-    cwd = os.path.join(os.getcwd(), "webpage\\index.html")
+    cwd = os.path.join(os.getcwd(), "webpage/index.html")
     try:
         s3_client.put_object(
             Body=cwd,
