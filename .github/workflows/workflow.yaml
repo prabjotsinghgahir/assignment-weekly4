@@ -1,6 +1,6 @@
 name: Deployment of assignment1
 
-run-name: Deploying resources for assignment 3
+run-name: Deploying resources for assignment 4
 
 on:
   push:
