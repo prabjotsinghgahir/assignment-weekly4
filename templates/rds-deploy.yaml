@@ -53,7 +53,7 @@ Resources:
     Type: "AWS::S3::Bucket"
     Properties:
       BucketName: !Ref S3BucketName
-      AccessControl: PublicRead
+      #AccessControl: PublicRead
       #PublicAccessBlockConfiguration:
         #BlockPublicAcls: false
         #BlockPublicPolicy: false
