@@ -11,7 +11,7 @@ template_name = 'templates/rds-deploy.yaml'
 file_zip = 'copy_function.py'
 lambda_function_name = "rds-write-lambda-psg"
 lambda_code_bucket = os.getenv("BUCKET")
-stack_name = 'assignment4'
+stack_name = 'assignment4-1'
 source_bucket_name = os.getenv("HOSTING_BUCKET")
 lambda_layer = "rds-pymysql-layer"
 api_gateway_stage_name = "Test"
@@ -99,13 +99,13 @@ reading = opening_temp.read()
 call_create_stack = stack_deploy.StackCreation(stack_name, reading, parameter)
 
 call_create_stack.create_stack()
-call_create_stack.stack_status()
+api_endpoint = call_create_stack.stack_status()
 
-#print(api_endpoint)
+print(api_endpoint)
 
 
-#replace_placeholder(api_endpoint)
-#upload_file()
+replace_placeholder(api_endpoint)
+upload_file()
 
 try:
     lambda_client.invoke(FunctionName=lambda_function_name)
