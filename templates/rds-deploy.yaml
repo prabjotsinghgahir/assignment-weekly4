@@ -53,17 +53,17 @@ Resources:
     Type: "AWS::S3::Bucket"
     Properties:
       BucketName: !Ref S3BucketName
+      AccessControl: PublicRead
+      #PublicAccessBlockConfiguration:
+        #BlockPublicAcls: false
+        #BlockPublicPolicy: false
+        #IgnorePublicAcls: false
+        #RestrictPublicBuckets: false
+      WebsiteConfiguration:
+        IndexDocument: !Ref UIFileName
       OwnershipControls:
         Rules:
           - ObjectOwnership: ObjectWriter
-      AccessControl: PublicRead
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: false
-        BlockPublicPolicy: false
-        IgnorePublicAcls: false
-        RestrictPublicBuckets: false
-      WebsiteConfiguration:
-        IndexDocument: !Ref UIFileName
   Secretm:
     Type: "AWS::SecretsManager::Secret"
     Properties:
