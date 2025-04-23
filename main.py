@@ -98,7 +98,7 @@ reading = opening_temp.read()
 
 call_create_stack = stack_deploy.StackCreation(stack_name, reading, parameter)
 
-call_create_stack.create_stack()
+creating_stack = call_create_stack.create_stack()
 api_endpoint = call_create_stack.stack_status()
 
 print(api_endpoint)
