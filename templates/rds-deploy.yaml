@@ -53,6 +53,9 @@ Resources:
     Type: "AWS::S3::Bucket"
     Properties:
       BucketName: !Ref S3BucketName
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
       AccessControl: PublicRead
       PublicAccessBlockConfiguration:
         BlockPublicAcls: false
