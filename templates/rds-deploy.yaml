@@ -55,7 +55,7 @@ Resources:
       BucketName: !Ref S3BucketName
       OwnershipControls:
         Rules:
-          - ObjectOwnership: BucketOwnerPreferred
+          - ObjectOwnership: ObjectWriter
       AccessControl: PublicRead
       PublicAccessBlockConfiguration:
         BlockPublicAcls: false
