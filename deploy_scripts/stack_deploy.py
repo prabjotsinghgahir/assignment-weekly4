@@ -55,6 +55,7 @@ class StackCreation:
             except client.exceptions.ClientError as err:
                 logging.warning(f"{err}")
             logging.info("Stack updated")
+            return ""
 
     def stack_status(self):
         try:
