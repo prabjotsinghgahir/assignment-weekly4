@@ -28,9 +28,10 @@ def replace_placeholder(api_endpoint):
 def upload_file():
     bucket_name = os.getenv("HOSTING_BUCKET")
     cwd = os.path.join(os.getcwd(), "webpage/index.html")
+    webpage = open(cwd).read()
     try:
         s3_client.put_object(
-            Body=cwd,
+            Body=webpage,
             Bucket=bucket_name,
             Key="index.html",
             ContentType='text/html',
