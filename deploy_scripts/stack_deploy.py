@@ -55,7 +55,6 @@ class StackCreation:
             except client.exceptions.ClientError as err:
                 logging.warning(f"{err}")
             logging.info("Stack updated")
-            return ""
 
     def stack_status(self):
         try:
@@ -88,4 +87,3 @@ class StackCreation:
         else:
             logging.info("Template is created or updated successfully")
             logging.info(f"Api gateway endpoint: {response['Stacks'][0]['Outputs'][0]['OutputValue']}")
-            return response['Stacks'][0]['Outputs'][0]['OutputValue']

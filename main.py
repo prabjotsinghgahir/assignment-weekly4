@@ -98,14 +98,14 @@ reading = opening_temp.read()
 
 call_create_stack = stack_deploy.StackCreation(stack_name, reading, parameter)
 
-creating_stack = call_create_stack.create_stack()
-api_endpoint = call_create_stack.stack_status()
+call_create_stack.create_stack()
+call_create_stack.stack_status()
 
-print(api_endpoint)
+#print(api_endpoint)
 
 
-replace_placeholder(api_endpoint)
-upload_file()
+#replace_placeholder(api_endpoint)
+#upload_file()
 
 try:
     lambda_client.invoke(FunctionName=lambda_function_name)
