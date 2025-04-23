@@ -12,6 +12,7 @@ on:
 
 env:
   BUCKET: "cf-code-bucket-psg"
+  HOSTING_BUCKET: "cf-static-website-psg1"
   REGION: "ap-south-1"
 
 jobs:

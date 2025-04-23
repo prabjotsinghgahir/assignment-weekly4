@@ -7,7 +7,7 @@ Parameters:
   UIFileName:
     Type: String
     Default: index.html
-  RestApiname:
+  RestApiName:
     Type: String
     Default: task
   RdsDatabseName:
@@ -18,7 +18,7 @@ Parameters:
     Default: MySecret
   CodeBucket:
     Type: String
-    Default: code-bucket-psg
+    Default: cf-code-bucket-psg1
   LambdaKey:
     Type: String
     Default: lambda-function.zip
@@ -31,21 +31,22 @@ Parameters:
   LambdaHandler1:
     Type: String
     Default: rds_lambda.handler
-  Lambdalayerfile:
+  LambdaLayerFile:
     Type: String
     Default: python.zip
-  Lambdalayername:
+  LambdaLayerName:
     Type: String
     Default: task4
   LambdaFunctionName:
     Type: String
-    Default: rds-lambda
+    Default: rds-lambda-write
   ApiGatewayStageName:
     Type: String
     Default: Test
   Subnets:
     Type: List<String>
-    Default: "subnet-081c48a795467b23e, subnet-0f80099cb152ad47c, subnet-0bf72325ac0ea98d1"
+  VpcId:
+    Type: String
 
 Resources:
   WebsiteBucket:
@@ -82,8 +83,8 @@ Resources:
       MasterUserPassword: !Join [ '', [ '{{resolve:secretsmanager:', !Ref Secretm, ':SecretString:password}}' ] ]
       StorageType: gp2
       AllocatedStorage: 20
-    DeletionPolicy: Snapshot
-    UpdateReplacePolicy: Snapshot
+    #DeletionPolicy: Snapshot
+    #UpdateReplacePolicy: Snapshot
   SecretRDSInstanceAttachment:
     Type: "AWS::SecretsManager::SecretTargetAttachment"
     Properties:
@@ -99,7 +100,7 @@ Resources:
           FromPort: 3306
           ToPort: 3306
           CidrIp: 0.0.0.0/0
-      VpcId: "vpc-0ff4bb576c57990b2"
+      VpcId: !Ref VpcId
   SecurityGroup:
     Type: "AWS::EC2::SecurityGroup"
     Properties:
@@ -109,4 +110,120 @@ Resources:
           FromPort: 3306
           ToPort: 3306
           SourceSecurityGroupId: !GetAtt SecrityGroupLambda.GroupId
-      VpcId: "vpc-0ff4bb576c57990b2"
+      VpcId: !Ref VpcId
+  RestApi:
+    Type: "AWS::ApiGateway::RestApi"
+    Properties:
+      Name: !Ref RestApiName
+  RestApiMethod:
+    Type: "AWS::ApiGateway::Method"
+    Properties:
+      AuthorizationType: "NONE"
+      HttpMethod: "GET"
+      Integration:
+        IntegrationHttpMethod: "POST"
+        Type: AWS_PROXY
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction.Arn}/invocations"
+      ResourceId: !GetAtt RestApi.RootResourceId
+      RestApiId: !Ref RestApi
+  RestApiDeployment:
+    Type: "AWS::ApiGateway::Deployment"
+    Properties:
+      RestApiId: !Ref RestApi
+      StageName: !Ref ApiGatewayStageName
+    DependsOn: RestApiMethod
+  LambdaPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      FunctionName: !GetAtt LambdaFunction.Arn
+      Action: 'lambda:InvokeFunction'
+      Principal: apigateway.amazonaws.com
+      SourceAccount: !Ref "AWS::AccountId"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/GET/"
+  LambdaFunction:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: "Rds-get-function-psg"
+      Role: !GetAtt IAM.Arn
+      Code:
+        S3Bucket: !Ref CodeBucket
+        S3Key: !Ref LambdaKey
+      Environment:
+        Variables:
+          secret: !Ref SecretName
+      Runtime: python3.13
+      Handler: !Ref LambdaHandler
+      Layers:
+        - !Ref LambdaLayer
+      Timeout: 90
+      VpcConfig:
+        SecurityGroupIds:
+          - !GetAtt SecrityGroupLambda.GroupId
+        SubnetIds: !Ref Subnets
+  InitialRdsFunction:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: !Ref LambdaFunctionName
+      Role: !GetAtt IAM.Arn
+      Code:
+        S3Bucket: !Ref CodeBucket
+        S3Key: !Ref LambdaKey1
+      Environment:
+        Variables:
+          secret: !Ref SecretName
+      Runtime: python3.13
+      Handler: !Ref LambdaHandler1
+      Layers:
+        - !Ref LambdaLayer
+      Timeout: 90
+      VpcConfig:
+        SecurityGroupIds:
+          - !GetAtt SecrityGroupLambda.GroupId
+        SubnetIds: !Ref Subnets
+  LambdaLayer:
+    Type: "AWS::Lambda::LayerVersion"
+    Properties:
+      CompatibleRuntimes:
+        - python3.13
+      Content:
+        S3Bucket: !Ref CodeBucket
+        S3Key: !Ref LambdaLayerFile
+      LayerName: !Ref LambdaLayerName
+  VpcEndpoint:
+    Type: "AWS::EC2::VPCEndpoint"
+    Properties:
+      PrivateDnsEnabled: true
+      SecurityGroupIds:
+        - !GetAtt SecurityGroup.GroupId
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.secretsmanager"
+      SubnetIds: !Ref Subnets
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+  IAM:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: "cf-a3-glue-lambda-s3-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: "cf-assign3-glue-lambda-s3-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "secretsmanager:GetSecretValue"
+                Resource: !Ref Secretm
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+Outputs:
+  ApiGatewayEndpoint:
+    Value: !Sub "https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/${ApiGatewayStageName}/"
