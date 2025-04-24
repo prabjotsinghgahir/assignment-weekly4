@@ -53,12 +53,6 @@ Resources:
     Type: "AWS::S3::Bucket"
     Properties:
       BucketName: !Ref S3BucketName
-      #AccessControl: PublicRead
-      #PublicAccessBlockConfiguration:
-        #BlockPublicAcls: false
-        #BlockPublicPolicy: false
-        #IgnorePublicAcls: false
-        #RestrictPublicBuckets: false
       WebsiteConfiguration:
         IndexDocument: !Ref UIFileName
       OwnershipControls:
@@ -211,7 +205,7 @@ Resources:
   IAM:
     Type: "AWS::IAM::Role"
     Properties:
-      RoleName: "cf-a3-glue-lambda-s3-role"
+      RoleName: "cf-a4-sm-lambda-role"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
