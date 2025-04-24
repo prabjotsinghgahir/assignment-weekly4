@@ -58,6 +58,11 @@ Resources:
       OwnershipControls:
         Rules:
           - ObjectOwnership: ObjectWriter
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
   Secretm:
     Type: "AWS::SecretsManager::Secret"
     Properties:
@@ -216,7 +221,7 @@ Resources:
             Action:
               - 'sts:AssumeRole'
       Policies:
-        - PolicyName: "cf-assign3-glue-lambda-s3-policy"
+        - PolicyName: "cf-assign4-sm-lambda-policy"
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
