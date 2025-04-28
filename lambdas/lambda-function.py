@@ -38,7 +38,6 @@ def lambda_handler(event, context):
         logging.error(f"Error: {er}")
         raise Exception(er)
     print(output)
-    print(type(output))
     return {
         'statusCode': 200,
         'body': "Transaction Count:  " + json.dumps(output[0])
